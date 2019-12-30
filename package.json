@@ -1,0 +1,26 @@
+{
+  "name": "@relaycorp/relaynet-pohttp",
+  "description": "Relaynet PoHTTP binding",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/relaycorp/relaynet-pohttp-js.git"
+  },
+  "keywords": [
+    "relaynet",
+    "relaynet-binding-pohttp"
+  ],
+  "author": {
+    "email": "no-reply@relaycorp.tech",
+    "name": "Relaycorp, Inc.",
+    "url": "https://relaycorp.tech/"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/relaycorp/relaynet-pohttp-js/issues"
+  },
+  "homepage": "https://github.com/relaycorp/relaynet-pohttp-js#readme"
+}
