@@ -1,9 +1,10 @@
-import axios, { AxiosResponse } from 'axios';
+import axios, { AxiosInstance, AxiosResponse } from 'axios';
+import * as https from 'https';
 
 import { PoHTTPError } from '../PoHTTPError';
 
 interface RequestOptions {
-  readonly headers: { [key: string]: string };
+  readonly headers: { readonly [key: string]: string };
   readonly maxRedirects: number;
   readonly timeout: number;
 }
@@ -19,7 +20,8 @@ export async function postRequest(
     timeout: 3000,
     ...options,
   };
-  const response = await postRequest_(url, body, finalOptions);
+  const axiosInstance = axios.create({ httpsAgent: new https.Agent({ keepAlive: true }) });
+  const response = await postRequest_(url, body, axiosInstance, finalOptions);
   if (response.status === 307 || response.status === 308) {
     throw new HTTPSError(`Reached maximum number of redirects (${finalOptions.maxRedirects})`);
   }
@@ -29,14 +31,16 @@ export async function postRequest(
 async function postRequest_(
   url: string,
   body: Buffer,
+  axiosInstance: AxiosInstance,
   options: RequestOptions,
 ): Promise<AxiosResponse> {
   if (url.startsWith('http:')) {
     throw new HTTPSError(`Can only POST to HTTPS URLs (got ${url})`);
   }
+  // tslint:disable-next-line:no-let
   let response;
   try {
-    response = await axios.post(url, body, {
+    response = await axiosInstance.post(url, body, {
       headers: options.headers,
       maxRedirects: 0,
       timeout: options.timeout,
@@ -52,7 +56,7 @@ async function postRequest_(
   if ((response.status === 307 || response.status === 308) && 0 < options.maxRedirects) {
     // Axios doesn't support 307 or 308 redirects: https://github.com/axios/axios/issues/2429,
     // so we have to follow the redirect manually.
-    return postRequest_(response.headers.location, body, {
+    return postRequest_(response.headers.location, body, axiosInstance, {
       ...options,
       maxRedirects: options.maxRedirects - 1,
     });
