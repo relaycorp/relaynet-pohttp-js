@@ -13,6 +13,24 @@ export async function postRequest(
   body: Buffer,
   options: Partial<RequestOptions> = {},
 ): Promise<AxiosResponse> {
+  const finalOptions = {
+    headers: {},
+    maxRedirects: 3,
+    timeout: 3000,
+    ...options,
+  };
+  const response = await postRequest_(url, body, finalOptions);
+  if (response.status === 307 || response.status === 308) {
+    throw new HTTPSError(`Reached maximum number of redirects (${finalOptions.maxRedirects})`);
+  }
+  return response;
+}
+
+async function postRequest_(
+  url: string,
+  body: Buffer,
+  options: RequestOptions,
+): Promise<AxiosResponse> {
   if (url.startsWith('http:')) {
     throw new HTTPSError(`Can only POST to HTTPS URLs (got ${url})`);
   }
@@ -21,7 +39,7 @@ export async function postRequest(
     response = await axios.post(url, body, {
       headers: options.headers,
       maxRedirects: 0,
-      timeout: options.timeout || 3000,
+      timeout: options.timeout,
     });
   } catch (error) {
     const responseStatus = error.response?.status;
@@ -31,16 +49,12 @@ export async function postRequest(
     response = error.response;
   }
 
-  if (response.status === 307 || response.status === 308) {
+  if ((response.status === 307 || response.status === 308) && 0 < options.maxRedirects) {
     // Axios doesn't support 307 or 308 redirects: https://github.com/axios/axios/issues/2429,
     // so we have to follow the redirect manually.
-    const maxRedirects = options.maxRedirects ?? 3;
-    if (maxRedirects === 0) {
-      throw new HTTPSError('Reached maximum number of redirects');
-    }
-    return postRequest(response.headers.location, body, {
+    return postRequest_(response.headers.location, body, {
       ...options,
-      maxRedirects: maxRedirects - 1,
+      maxRedirects: options.maxRedirects - 1,
     });
   }
 

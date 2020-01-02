@@ -151,7 +151,7 @@ describe('postRequest', function() {
 
       await expectPromiseToReject(
         postRequest(url, body),
-        new HTTPSError('Reached maximum number of redirects'),
+        new HTTPSError('Reached maximum number of redirects (3)'),
       );
     });
 
