@@ -67,12 +67,6 @@ describe('deliverParcel', () => {
     expect(agent).toHaveProperty('keepAlive', true);
   });
 
-  describe('DNS resolution', () => {
-    test.todo('Host should not be resolved if it is already an IP address');
-
-    test.todo('Host should be resolved if it is a DNS record');
-  });
-
   test('Non-TLS URLs should be refused', async () => {
     await expectPromiseToReject(
       deliverParcel('http://example.com', body),
