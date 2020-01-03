@@ -3,7 +3,7 @@ import bufferToArray from 'buffer-to-arraybuffer';
 
 import { expectPromiseToReject, getMockContext } from './_test_utils';
 import { deliverParcel, HTTPSError } from './client';
-import { PoHTTPError } from './PoHTTPError';
+import PoHTTPError from './PoHTTPError';
 
 describe('deliverParcel', () => {
   const url = 'https://example.com';
