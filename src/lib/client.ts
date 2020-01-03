@@ -1,7 +1,7 @@
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import * as https from 'https';
 
-import { PoHTTPError } from './PoHTTPError';
+import PoHTTPError from './PoHTTPError';
 
 interface DeliveryOptions {
   readonly relayAddress: string;
@@ -22,7 +22,7 @@ export async function deliverParcel(
   const axiosInstance = axios.create({ httpsAgent: new https.Agent({ keepAlive: true }) });
   const response = await postRequest(targetNodeUrl, parcelSerialized, axiosInstance, axiosOptions);
   if (response.status === 307 || response.status === 308) {
-    throw new HTTPSError(`Reached maximum number of redirects (${axiosOptions.maxRedirects})`);
+    throw new PoHTTPError(`Reached maximum number of redirects (${axiosOptions.maxRedirects})`);
   }
   return response;
 }
@@ -40,7 +40,7 @@ async function postRequest(
   options: SupportedAxiosRequestConfig,
 ): Promise<AxiosResponse> {
   if (url.startsWith('http:')) {
-    throw new HTTPSError(`Can only POST to HTTPS URLs (got ${url})`);
+    throw new PoHTTPError(`Can only POST to HTTPS URLs (got ${url})`);
   }
   // tslint:disable-next-line:no-let
   let response;
@@ -69,5 +69,3 @@ async function postRequest(
 
   return response;
 }
-
-export class HTTPSError extends PoHTTPError {}

@@ -2,7 +2,7 @@ import axios from 'axios';
 import bufferToArray from 'buffer-to-arraybuffer';
 
 import { expectPromiseToReject, getMockContext } from './_test_utils';
-import { deliverParcel, HTTPSError } from './client';
+import { deliverParcel } from './client';
 import PoHTTPError from './PoHTTPError';
 
 describe('deliverParcel', () => {
@@ -177,7 +177,7 @@ describe('deliverParcel', () => {
 
       await expectPromiseToReject(
         deliverParcel(url, body),
-        new HTTPSError('Reached maximum number of redirects (3)'),
+        new PoHTTPError('Reached maximum number of redirects (3)'),
       );
     });
 
