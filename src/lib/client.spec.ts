@@ -3,6 +3,7 @@ import bufferToArray from 'buffer-to-arraybuffer';
 
 import { expectPromiseToReject, getMockContext } from './_test_utils';
 import { deliverParcel, HTTPSError } from './client';
+import { PoHTTPError } from './PoHTTPError';
 
 describe('deliverParcel', () => {
   const url = 'https://example.com';
@@ -193,16 +194,13 @@ describe('deliverParcel', () => {
     });
   });
 
-  test('Unexpected axios exceptions should be rethrown', async () => {
+  test('Unexpected axios exceptions should be wrapped rethrown', async () => {
     // @ts-ignore
     stubAxiosPost.mockReset();
-    const error = new Error('Haha, in thy face');
-    stubAxiosPost.mockRejectedValueOnce(error);
+    const axiosError = new Error('Haha, in thy face');
+    stubAxiosPost.mockRejectedValueOnce(axiosError);
 
-    await expectPromiseToReject(deliverParcel(url, body), error);
+    const expectedError = new PoHTTPError(axiosError, 'Failed to deliver parcel');
+    await expectPromiseToReject(deliverParcel(url, body), expectedError);
   });
-
-  test.todo('Any networking error should be wrapped');
-
-  test.todo('Rate limiting error should be wrapped in a dedicate exception class');
 });

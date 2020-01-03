@@ -47,7 +47,7 @@ async function postRequest(
   } catch (error) {
     const responseStatus = error.response?.status;
     if (!responseStatus || responseStatus < 300 || 400 <= responseStatus) {
-      throw error;
+      throw new PoHTTPError(error, 'Failed to deliver parcel');
     }
     response = error.response;
   }
