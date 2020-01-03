@@ -1,11 +1,12 @@
 import axios from 'axios';
+import bufferToArray from 'buffer-to-arraybuffer';
 
-import { expectPromiseToReject, getMockContext } from '../_test_utils';
-import { HTTPSError, postRequest } from './https';
+import { expectPromiseToReject, getMockContext } from './_test_utils';
+import { deliverParcel, HTTPSError } from './client';
 
-describe('postRequest', () => {
+describe('deliverParcel', () => {
   const url = 'https://example.com';
-  const body = Buffer.from('Hey');
+  const body = bufferToArray(Buffer.from('Hey'));
   const stubResponse = { status: 200 };
   const stubAxiosPost = jest.fn();
 
@@ -21,7 +22,7 @@ describe('postRequest', () => {
   });
 
   test('Body should be POSTed to the specified URL', async () => {
-    await postRequest(url, body);
+    await deliverParcel(url, body);
 
     expect(stubAxiosPost).toBeCalledTimes(1);
     const postCallArgs = getMockContext(stubAxiosPost).calls[0];
@@ -31,7 +32,7 @@ describe('postRequest', () => {
 
   test('Additional request headers should be accepted', async () => {
     const headers = { 'X-Foo': 'Bar' };
-    await postRequest(url, body, { headers });
+    await deliverParcel(url, body, { headers: headers });
 
     expect(stubAxiosPost).toBeCalledTimes(1);
     const postCallArgs = getMockContext(stubAxiosPost).calls[0];
@@ -39,7 +40,7 @@ describe('postRequest', () => {
   });
 
   test('Axios response should be returned', async () => {
-    const response = await postRequest(url, body);
+    const response = await deliverParcel(url, body);
 
     expect(response).toBe(stubResponse);
   });
@@ -47,7 +48,7 @@ describe('postRequest', () => {
   test('Agent should be configured to use Keep-Alive', async () => {
     jest.spyOn(axios, 'create');
 
-    await postRequest(url, body);
+    await deliverParcel(url, body);
 
     expect(axios.create).toBeCalledTimes(1);
     const axiosCreateCall = getMockContext(axios.create).calls[0];
@@ -64,14 +65,14 @@ describe('postRequest', () => {
 
   test('Non-TLS URLs should be refused', async () => {
     await expectPromiseToReject(
-      postRequest('http://example.com', body),
+      deliverParcel('http://example.com', body),
       new Error('Can only POST to HTTPS URLs (got http://example.com)'),
     );
   });
 
   describe('Timeout', () => {
     test('Request should time out after 3 seconds by default', async () => {
-      await postRequest(url, body);
+      await deliverParcel(url, body);
 
       const postCallArgs = getMockContext(stubAxiosPost).calls[0];
       expect(postCallArgs[2]).toHaveProperty('timeout', 3000);
@@ -79,7 +80,7 @@ describe('postRequest', () => {
 
     test('A custom timeout should be accepted', async () => {
       const timeout = 4321;
-      await postRequest(url, body, { timeout });
+      await deliverParcel(url, body, { timeout });
 
       const postCallArgs = getMockContext(stubAxiosPost).calls[0];
       expect(postCallArgs[2]).toHaveProperty('timeout', timeout);
@@ -105,7 +106,7 @@ describe('postRequest', () => {
       });
       stubAxiosPost.mockResolvedValueOnce(Promise.resolve({ status: 202 }));
 
-      await postRequest(url, body);
+      await deliverParcel(url, body);
 
       expect(stubAxiosPost).toBeCalledTimes(2);
       const postCall2Args = getMockContext(stubAxiosPost).calls[1];
@@ -118,7 +119,7 @@ describe('postRequest', () => {
       });
       stubAxiosPost.mockResolvedValueOnce({ status: 202 });
 
-      await postRequest(url, body);
+      await deliverParcel(url, body);
 
       expect(stubAxiosPost).toBeCalledTimes(2);
       const postCall2Args = getMockContext(stubAxiosPost).calls[1];
@@ -129,7 +130,7 @@ describe('postRequest', () => {
       const redirectResponse = { ...stubRedirectResponse, status: 302 };
       stubAxiosPost.mockRejectedValueOnce({ response: redirectResponse });
 
-      const response = await postRequest(url, body);
+      const response = await deliverParcel(url, body);
 
       expect(stubAxiosPost).toBeCalledTimes(1);
       expect(response).toBe(redirectResponse);
@@ -140,7 +141,7 @@ describe('postRequest', () => {
       stubAxiosPost.mockResolvedValueOnce({ status: 202 });
 
       const options = { headers: { foo: 'bar' }, timeout: 2 };
-      await postRequest(url, body, options);
+      await deliverParcel(url, body, options);
 
       expect(stubAxiosPost).toBeCalledTimes(2);
       const postCall2Args = getMockContext(stubAxiosPost).calls[1];
@@ -154,7 +155,7 @@ describe('postRequest', () => {
       stubAxiosPost.mockRejectedValueOnce({ response: stubRedirectResponse });
       stubAxiosPost.mockResolvedValueOnce(stubResponse);
 
-      const response = await postRequest(url, body);
+      const response = await deliverParcel(url, body);
 
       expect(response).toBe(stubResponse);
     });
@@ -166,7 +167,7 @@ describe('postRequest', () => {
       stubAxiosPost.mockRejectedValueOnce({ response: stubRedirectResponse });
 
       await expectPromiseToReject(
-        postRequest(url, body),
+        deliverParcel(url, body),
         new HTTPSError('Reached maximum number of redirects (3)'),
       );
     });
@@ -178,7 +179,7 @@ describe('postRequest', () => {
       stubAxiosPost.mockRejectedValueOnce({ response: stubRedirectResponse });
       stubAxiosPost.mockResolvedValueOnce(stubResponse);
 
-      const response = await postRequest(url, body, { maxRedirects: 4 });
+      const response = await deliverParcel(url, body, { maxRedirects: 4 });
 
       expect(response).toBe(stubResponse);
     });
@@ -190,6 +191,10 @@ describe('postRequest', () => {
     const error = new Error('Haha, in thy face');
     stubAxiosPost.mockRejectedValueOnce(error);
 
-    await expectPromiseToReject(postRequest(url, body), error);
+    await expectPromiseToReject(deliverParcel(url, body), error);
   });
+
+  test.todo('Any networking error should be wrapped');
+
+  test.todo('Rate limiting error should be wrapped in a dedicate exception class');
 });
