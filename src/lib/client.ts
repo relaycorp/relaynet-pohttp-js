@@ -27,11 +27,17 @@ export async function deliverParcel(
   return response;
 }
 
+interface SupportedAxiosRequestConfig {
+  readonly headers: { [key: string]: any };
+  readonly maxRedirects: number;
+  readonly timeout: number;
+}
+
 async function postRequest(
   url: string,
   body: ArrayBuffer,
   axiosInstance: AxiosInstance,
-  options: { headers: { [key: string]: any }; maxRedirects: number; timeout: number },
+  options: SupportedAxiosRequestConfig,
 ): Promise<AxiosResponse> {
   if (url.startsWith('http:')) {
     throw new HTTPSError(`Can only POST to HTTPS URLs (got ${url})`);

@@ -34,7 +34,7 @@ describe('deliverParcel', () => {
   describe('Relay address', () => {
     test('Relay address should be included if specified', async () => {
       const relayAddress = 'relay-address';
-      await deliverParcel(url, body, { relayAddress: relayAddress });
+      await deliverParcel(url, body, { relayAddress });
 
       expect(stubAxiosPost).toBeCalledTimes(1);
       const postCallArgs = getMockContext(stubAxiosPost).calls[0];
