@@ -30,13 +30,23 @@ describe('deliverParcel', () => {
     expect(postCallArgs[1]).toBe(body);
   });
 
-  test('Additional request headers should be accepted', async () => {
-    const headers = { 'X-Foo': 'Bar' };
-    await deliverParcel(url, body, { headers: headers });
+  describe('Relay address', () => {
+    test('Relay address should be included if specified', async () => {
+      const relayAddress = 'relay-address';
+      await deliverParcel(url, body, { relayAddress: relayAddress });
 
-    expect(stubAxiosPost).toBeCalledTimes(1);
-    const postCallArgs = getMockContext(stubAxiosPost).calls[0];
-    expect(postCallArgs[2]).toHaveProperty('headers', headers);
+      expect(stubAxiosPost).toBeCalledTimes(1);
+      const postCallArgs = getMockContext(stubAxiosPost).calls[0];
+      expect(postCallArgs[2]).toHaveProperty('headers.X-Relaynet-Relay', relayAddress);
+    });
+
+    test('Relay address should be absent by default', async () => {
+      await deliverParcel(url, body);
+
+      expect(stubAxiosPost).toBeCalledTimes(1);
+      const postCallArgs = getMockContext(stubAxiosPost).calls[0];
+      expect(postCallArgs[2]).not.toHaveProperty('headers.X-Relaynet-Relay');
+    });
   });
 
   test('Axios response should be returned', async () => {
@@ -140,13 +150,17 @@ describe('deliverParcel', () => {
       stubAxiosPost.mockRejectedValueOnce({ response: stubRedirectResponse });
       stubAxiosPost.mockResolvedValueOnce({ status: 202 });
 
-      const options = { headers: { foo: 'bar' }, timeout: 2 };
+      const options = { relayAddress: 'the address', timeout: 2 };
       await deliverParcel(url, body, options);
 
       expect(stubAxiosPost).toBeCalledTimes(2);
       const postCall2Args = getMockContext(stubAxiosPost).calls[1];
       expect(postCall2Args[1]).toEqual(body);
-      expect(postCall2Args[2]).toEqual({ ...options, maxRedirects: 0 });
+      expect(postCall2Args[2]).toEqual({
+        headers: { 'X-Relaynet-Relay': options.relayAddress },
+        maxRedirects: 0,
+        timeout: options.timeout,
+      });
     });
 
     test('Redirects should be followed up to a maximum of 3 times by default', async () => {
