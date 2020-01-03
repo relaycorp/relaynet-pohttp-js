@@ -28,7 +28,7 @@ export async function deliverParcel(
 }
 
 interface SupportedAxiosRequestConfig {
-  readonly headers: { [key: string]: any };
+  readonly headers: { readonly [key: string]: any };
   readonly maxRedirects: number;
   readonly timeout: number;
 }
