@@ -19,18 +19,20 @@ npm install @relaycorp/relaynet-pohttp
 
 As the client-side implementation of an external PDC, the only operation supported by this library is the delivery of parcels.
 
-relaynet-pohttp-js is meant to be used with the [core library](https://www.npmjs.com/package/@relaycorp/relaynet-core). For example:
+relaynet-pohttp-js is meant to be used with the [core library](https://www.npmjs.com/package/@relaycorp/relaynet-core). For example, this is how a relay would deliver a parcel to the public endpoint `rne+https://ping.relaycorp.tech`:
 
 ```javascript
 import { deliverParcel } from '@relaycorp/relaynet-pohttp';
 
-async function main() {
-  const parcel = functionThatCreatesAParcel();
+const relayAddress = 'rng+https://relay.relaycorp.tech';
 
-  await deliverParcel(
-    'https://ping.relaycorp.tech',
-    await parcel.serialize(privateKey),
-  );
+async function main() {
+  // `parcelSerialized` is the ArrayBuffer representation of the parcel as a RAMF message
+  const parcelSerialized = await yourFunctionToRetrieveTheParcel();
+
+  await deliverParcel('https://ping.relaycorp.tech', parcelSerialized, {
+    relayAddress,
+  });
 }
 ```
 
