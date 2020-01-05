@@ -17,7 +17,7 @@ npm install @relaycorp/relaynet-pohttp
 
 ## Use
 
-As a client-side implementation of an external PDC, the only operation supported by this library is the delivery of parcels.
+As the client-side implementation of an external PDC, the only operation supported by this library is the delivery of parcels.
 
 relaynet-pohttp-js is meant to be used with the [core library](https://www.npmjs.com/package/@relaycorp/relaynet-core). For example:
 
