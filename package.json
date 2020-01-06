@@ -43,7 +43,7 @@
   "engines": {
     "node": ">=10"
   },
-  "homepage": "https://github.com/relaycorp/relaynet-pohttp-js#readme",
+  "homepage": "https://docs.relaycorp.tech/relaynet-pohttp-js/",
   "prettier": "@relaycorp/shared-config/.prettierrc.json",
   "publishConfig": {
     "access": "public",
