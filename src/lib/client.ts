@@ -3,7 +3,7 @@ import * as https from 'https';
 
 import PoHTTPError from './PoHTTPError';
 
-interface DeliveryOptions {
+export interface DeliveryOptions {
   readonly relayAddress: string;
   readonly maxRedirects: number;
   readonly timeout: number;
