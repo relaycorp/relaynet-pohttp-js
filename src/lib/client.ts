@@ -9,6 +9,13 @@ interface DeliveryOptions {
   readonly timeout: number;
 }
 
+/**
+ * Deliver the parcel to the specified node endpoint.
+ *
+ * @param targetNodeUrl The URL of the target node endpoint.
+ * @param parcelSerialized The RAMF serialization of the parcel.
+ * @param options
+ */
 export async function deliverParcel(
   targetNodeUrl: string,
   parcelSerialized: ArrayBuffer,
