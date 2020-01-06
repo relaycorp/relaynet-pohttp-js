@@ -1,1 +1,0 @@
-# PoHTTP Implementation in JavaScript

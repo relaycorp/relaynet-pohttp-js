@@ -3,12 +3,20 @@ import * as https from 'https';
 
 import PoHTTPError from './PoHTTPError';
 
-interface DeliveryOptions {
+export interface DeliveryOptions {
   readonly relayAddress: string;
   readonly maxRedirects: number;
   readonly timeout: number;
 }
 
+/**
+ * Deliver the parcel to the specified node endpoint.
+ *
+ * @param targetNodeUrl The URL of the target node endpoint.
+ * @param parcelSerialized The RAMF serialization of the parcel.
+ * @param options
+ * @throws [[PoHTTPError]] when there's a networking error.
+ */
 export async function deliverParcel(
   targetNodeUrl: string,
   parcelSerialized: ArrayBuffer,
