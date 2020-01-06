@@ -7,6 +7,8 @@ jobs:
     steps:
       - test:
           nodeVersion: "10"
+    branches:
+      ignore: gh-pages
   'node-12':
     docker:
       - image: circleci/node:12
@@ -14,6 +16,8 @@ jobs:
     steps:
       - test:
           nodeVersion: "12"
+    branches:
+      ignore: gh-pages
 
 commands:
   test:
@@ -40,7 +44,3 @@ workflows:
     jobs:
       - node-10
       - node-12
-
-filters:
-  branches:
-    ignore: gh-pages
