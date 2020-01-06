@@ -40,3 +40,7 @@ workflows:
     jobs:
       - node-10
       - node-12
+
+filters:
+  branches:
+    ignore: gh-pages
