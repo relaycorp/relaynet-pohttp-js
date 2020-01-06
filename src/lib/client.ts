@@ -15,6 +15,7 @@ export interface DeliveryOptions {
  * @param targetNodeUrl The URL of the target node endpoint.
  * @param parcelSerialized The RAMF serialization of the parcel.
  * @param options
+ * @throws [[PoHTTPError]] when there's a networking error.
  */
 export async function deliverParcel(
   targetNodeUrl: string,
