@@ -1,4 +1,5 @@
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
+import { get as getEnvVar } from 'env-var';
 import * as https from 'https';
 
 import PoHTTPError from './PoHTTPError';
@@ -47,7 +48,8 @@ async function postRequest(
   axiosInstance: AxiosInstance,
   options: SupportedAxiosRequestConfig,
 ): Promise<AxiosResponse> {
-  if (url.startsWith('http:')) {
+  const isTlsRequired = getEnvVar('POHTTP_TLS_REQUIRED', 'true').asBool();
+  if (isTlsRequired && url.startsWith('http:')) {
     throw new PoHTTPError(`Can only POST to HTTPS URLs (got ${url})`);
   }
   // tslint:disable-next-line:no-let

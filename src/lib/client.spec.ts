@@ -1,7 +1,7 @@
 import axios from 'axios';
 import bufferToArray from 'buffer-to-arraybuffer';
 
-import { expectPromiseToReject, getMockContext } from './_test_utils';
+import { expectPromiseToReject, getMockContext, mockEnvVars } from './_test_utils';
 import { deliverParcel } from './client';
 import PoHTTPError from './PoHTTPError';
 
@@ -68,11 +68,32 @@ describe('deliverParcel', () => {
     expect(agent).toHaveProperty('keepAlive', true);
   });
 
-  test('Non-TLS URLs should be refused', async () => {
-    await expectPromiseToReject(
-      deliverParcel('http://example.com', body),
-      new Error('Can only POST to HTTPS URLs (got http://example.com)'),
-    );
+  describe('POHTTP_TLS_REQUIRED', () => {
+    test('Non-TLS URLs should be refused if POHTTP_TLS_REQUIRED is undefined', async () => {
+      mockEnvVars({});
+
+      await expectPromiseToReject(
+        deliverParcel('http://example.com', body),
+        new Error('Can only POST to HTTPS URLs (got http://example.com)'),
+      );
+    });
+
+    test('Non-TLS URLs should be allowed if POHTTP_TLS_REQUIRED=false', async () => {
+      mockEnvVars({ POHTTP_TLS_REQUIRED: 'false' });
+
+      await deliverParcel('http://example.com', body);
+
+      expect(stubAxiosPost).toBeCalledTimes(1);
+    });
+
+    test('Non-TLS URLs should be refused if POHTTP_TLS_REQUIRED=true', async () => {
+      mockEnvVars({ POHTTP_TLS_REQUIRED: 'true' });
+
+      await expectPromiseToReject(
+        deliverParcel('http://example.com', body),
+        new Error('Can only POST to HTTPS URLs (got http://example.com)'),
+      );
+    });
   });
 
   describe('Timeout', () => {

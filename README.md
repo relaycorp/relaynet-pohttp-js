@@ -41,6 +41,10 @@ By default, a timeout of 3 seconds will be used and up to 3 consecutive redirect
 
 TypeScript type declarations are included with this library.
 
+## Use in integration or functional tests
+
+Per the Relaynet specs, bindings like PoHTTP must be used over TLS, but this validation can be turned off in test suites that send requests to a mock HTTP server by setting the environment variable `POHTTP_TLS_REQUIRED` to `'false'`.
+
 ## Support
 
 If you have any questions or comments, you can [find us on Gitter](https://gitter.im/relaynet/community) or [create an issue on the GitHub project](https://github.com/relaycorp/relaynet-pohttp-js/issues/new/choose).
