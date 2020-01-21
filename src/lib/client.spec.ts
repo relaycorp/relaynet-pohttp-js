@@ -51,7 +51,7 @@ describe('deliverParcel', () => {
 
       expect(stubAxiosPost).toBeCalledTimes(1);
       const postCallArgs = getMockContext(stubAxiosPost).calls[0];
-      expect(postCallArgs[2]).toHaveProperty('headers.X-Relaynet-Relay', relayAddress);
+      expect(postCallArgs[2]).toHaveProperty('headers.X-Relaynet-Gateway', relayAddress);
     });
 
     test('Relay address should be absent by default', async () => {
@@ -59,7 +59,7 @@ describe('deliverParcel', () => {
 
       expect(stubAxiosPost).toBeCalledTimes(1);
       const postCallArgs = getMockContext(stubAxiosPost).calls[0];
-      expect(postCallArgs[2]).not.toHaveProperty('headers.X-Relaynet-Relay');
+      expect(postCallArgs[2]).not.toHaveProperty('headers.X-Relaynet-Gateway');
     });
   });
 
@@ -186,7 +186,7 @@ describe('deliverParcel', () => {
       const postCall2Args = getMockContext(stubAxiosPost).calls[1];
       expect(postCall2Args[1]).toEqual(body);
       expect(postCall2Args[2]).toEqual({
-        headers: { 'X-Relaynet-Relay': options.relayAddress },
+        headers: { 'X-Relaynet-Gateway': options.relayAddress },
         maxRedirects: 0,
         timeout: options.timeout,
       });

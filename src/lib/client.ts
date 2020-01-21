@@ -24,7 +24,7 @@ export async function deliverParcel(
   options: Partial<DeliveryOptions> = {},
 ): Promise<AxiosResponse> {
   const axiosOptions = {
-    headers: options.relayAddress ? { 'X-Relaynet-Relay': options.relayAddress } : {},
+    headers: options.relayAddress ? { 'X-Relaynet-Gateway': options.relayAddress } : {},
     maxRedirects: options.maxRedirects ?? 3,
     timeout: options.timeout ?? 3000,
   };
