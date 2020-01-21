@@ -43,7 +43,7 @@ TypeScript type declarations are included with this library.
 
 ## Use in integration or functional tests
 
-Per the Relaynet specs, bindings like PoHTTP must be used over TLS, but this validation can be turned off in test suites that send requests to a mock HTTP server by setting the environment variable `POHTTP_TLS_REQUIRED` to `'false'`.
+Per the Relaynet specs, bindings like PoHTTP must be used over TLS, but this validation can be turned off in test suites that send requests to a mock HTTP server by setting the environment variable `POHTTP_TLS_REQUIRED` to `false`.
 
 ## Support
 
