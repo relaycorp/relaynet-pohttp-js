@@ -28,7 +28,10 @@ export async function deliverParcel(
     maxRedirects: options.maxRedirects ?? 3,
     timeout: options.timeout ?? 3000,
   };
-  const axiosInstance = axios.create({ httpsAgent: new https.Agent({ keepAlive: true }) });
+  const axiosInstance = axios.create({
+    headers: { 'Content-Type': 'application/vnd.relaynet.parcel' },
+    httpsAgent: new https.Agent({ keepAlive: true }),
+  });
   const response = await postRequest(targetNodeUrl, parcelSerialized, axiosInstance, axiosOptions);
   if (response.status === 307 || response.status === 308) {
     throw new PoHTTPError(`Reached maximum number of redirects (${axiosOptions.maxRedirects})`);

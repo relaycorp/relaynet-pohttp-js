@@ -31,6 +31,19 @@ describe('deliverParcel', () => {
     expect(postCallArgs[1]).toBe(body);
   });
 
+  test('Request content type should be application/vnd.relaynet.parcel', async () => {
+    jest.spyOn(axios, 'create');
+
+    await deliverParcel(url, body);
+
+    expect(axios.create).toBeCalledTimes(1);
+    const axiosCreateCall = getMockContext(axios.create).calls[0];
+    expect(axiosCreateCall[0]).toHaveProperty(
+      'headers.Content-Type',
+      'application/vnd.relaynet.parcel',
+    );
+  });
+
   describe('Relay address', () => {
     test('Relay address should be included if specified', async () => {
       const relayAddress = 'relay-address';
