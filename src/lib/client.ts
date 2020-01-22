@@ -5,7 +5,7 @@ import * as https from 'https';
 import PoHTTPError from './PoHTTPError';
 
 export interface DeliveryOptions {
-  readonly relayAddress: string;
+  readonly gatewayAddress: string;
   readonly maxRedirects: number;
   readonly timeout: number;
 }
@@ -24,7 +24,7 @@ export async function deliverParcel(
   options: Partial<DeliveryOptions> = {},
 ): Promise<AxiosResponse> {
   const axiosOptions = {
-    headers: options.relayAddress ? { 'X-Relaynet-Gateway': options.relayAddress } : {},
+    headers: options.gatewayAddress ? { 'X-Relaynet-Gateway': options.gatewayAddress } : {},
     maxRedirects: options.maxRedirects ?? 3,
     timeout: options.timeout ?? 3000,
   };

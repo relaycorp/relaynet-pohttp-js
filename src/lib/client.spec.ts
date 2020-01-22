@@ -2,7 +2,7 @@ import axios from 'axios';
 import bufferToArray from 'buffer-to-arraybuffer';
 
 import { expectPromiseToReject, getMockContext, mockEnvVars } from './_test_utils';
-import { deliverParcel } from './client';
+import { deliverParcel, DeliveryOptions } from './client';
 import PoHTTPError from './PoHTTPError';
 
 describe('deliverParcel', () => {
@@ -47,7 +47,7 @@ describe('deliverParcel', () => {
   describe('Relay address', () => {
     test('Relay address should be included if specified', async () => {
       const relayAddress = 'relay-address';
-      await deliverParcel(url, body, { relayAddress });
+      await deliverParcel(url, body, { gatewayAddress: relayAddress });
 
       expect(stubAxiosPost).toBeCalledTimes(1);
       const postCallArgs = getMockContext(stubAxiosPost).calls[0];
@@ -179,14 +179,14 @@ describe('deliverParcel', () => {
       stubAxiosPost.mockRejectedValueOnce({ response: stubRedirectResponse });
       stubAxiosPost.mockResolvedValueOnce({ status: 202 });
 
-      const options = { relayAddress: 'the address', timeout: 2 };
+      const options: Partial<DeliveryOptions> = { gatewayAddress: 'the address', timeout: 2 };
       await deliverParcel(url, body, options);
 
       expect(stubAxiosPost).toBeCalledTimes(2);
       const postCall2Args = getMockContext(stubAxiosPost).calls[1];
       expect(postCall2Args[1]).toEqual(body);
       expect(postCall2Args[2]).toEqual({
-        headers: { 'X-Relaynet-Gateway': options.relayAddress },
+        headers: { 'X-Relaynet-Gateway': options.gatewayAddress },
         maxRedirects: 0,
         timeout: options.timeout,
       });
