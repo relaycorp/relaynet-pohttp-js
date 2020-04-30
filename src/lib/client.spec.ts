@@ -4,6 +4,7 @@ import bufferToArray from 'buffer-to-arraybuffer';
 import { expectPromiseToReject, getMockContext, mockEnvVars } from './_test_utils';
 import { deliverParcel, DeliveryOptions } from './client';
 import PoHTTPError from './PoHTTPError';
+import PoHTTPInvalidParcelError from './PoHTTPInvalidParcelError';
 
 describe('deliverParcel', () => {
   const url = 'https://example.com';
@@ -226,6 +227,16 @@ describe('deliverParcel', () => {
 
       expect(response).toBe(stubResponse);
     });
+  });
+
+  test('HTTP 403 should throw a PoHTTPInvalidParcelError', async () => {
+    // @ts-ignore
+    stubAxiosPost.mockReset();
+    stubAxiosPost.mockRejectedValueOnce({ response: { status: 403 } });
+
+    await expect(deliverParcel(url, body)).rejects.toEqual(
+      new PoHTTPInvalidParcelError('Server refused to accept parcel'),
+    );
   });
 
   test('Unexpected axios exceptions should be wrapped rethrown', async () => {

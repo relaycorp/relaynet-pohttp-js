@@ -3,6 +3,7 @@ import { get as getEnvVar } from 'env-var';
 import * as https from 'https';
 
 import PoHTTPError from './PoHTTPError';
+import PoHTTPInvalidParcelError from './PoHTTPInvalidParcelError';
 
 export interface DeliveryOptions {
   readonly gatewayAddress: string;
@@ -65,6 +66,9 @@ async function postRequest(
     });
   } catch (error) {
     const responseStatus = error.response?.status;
+    if (responseStatus && responseStatus === 403) {
+      throw new PoHTTPInvalidParcelError('Server refused to accept parcel');
+    }
     if (!responseStatus || responseStatus < 300 || 400 <= responseStatus) {
       throw new PoHTTPError(error, 'Failed to deliver parcel');
     }
