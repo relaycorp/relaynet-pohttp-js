@@ -21,7 +21,7 @@ export interface DeliveryOptions {
  */
 export async function deliverParcel(
   targetNodeUrl: string,
-  parcelSerialized: ArrayBuffer,
+  parcelSerialized: ArrayBuffer | Buffer,
   options: Partial<DeliveryOptions> = {},
 ): Promise<AxiosResponse> {
   const axiosOptions = {
@@ -48,7 +48,7 @@ interface SupportedAxiosRequestConfig {
 
 async function postRequest(
   url: string,
-  body: ArrayBuffer,
+  body: ArrayBuffer | Buffer,
   axiosInstance: AxiosInstance,
   options: SupportedAxiosRequestConfig,
 ): Promise<AxiosResponse> {
