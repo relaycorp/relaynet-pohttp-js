@@ -67,7 +67,10 @@ async function postRequest(
   } catch (error) {
     const responseStatus = error.response?.status;
     if (responseStatus && responseStatus === 403) {
-      throw new PoHTTPInvalidParcelError('Server refused to accept parcel');
+      const reason = error.response?.data?.message;
+      throw new PoHTTPInvalidParcelError(
+        reason ? `Server refused to accept parcel: ${reason}` : 'Server refused to accept parcel',
+      );
     }
     if (!responseStatus || responseStatus < 300 || 400 <= responseStatus) {
       throw new PoHTTPError(error, 'Failed to deliver parcel');

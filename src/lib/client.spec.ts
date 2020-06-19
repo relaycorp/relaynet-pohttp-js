@@ -239,6 +239,17 @@ describe('deliverParcel', () => {
     );
   });
 
+  test('PoHTTPInvalidParcelError should mention the reason if available', async () => {
+    // @ts-ignore
+    stubAxiosPost.mockReset();
+    const reason = 'Denied';
+    stubAxiosPost.mockRejectedValueOnce({ response: { data: { message: reason }, status: 403 } });
+
+    await expect(deliverParcel(url, body)).rejects.toEqual(
+      new PoHTTPInvalidParcelError(`Server refused to accept parcel: ${reason}`),
+    );
+  });
+
   test('Unexpected axios exceptions should be wrapped rethrown', async () => {
     // @ts-ignore
     stubAxiosPost.mockReset();
