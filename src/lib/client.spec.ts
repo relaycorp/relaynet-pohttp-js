@@ -259,4 +259,15 @@ describe('deliverParcel', () => {
     const expectedError = new PoHTTPError(axiosError, 'Failed to deliver parcel');
     await expectPromiseToReject(deliverParcel(url, body), expectedError);
   });
+
+  test('HTTP 4XX errors should mention the reason if available', async () => {
+    // @ts-ignore
+    stubAxiosPost.mockReset();
+    const reason = 'Denied';
+    stubAxiosPost.mockRejectedValueOnce({ response: { data: { message: reason }, status: 400 } });
+
+    await expect(deliverParcel(url, body)).rejects.toEqual(
+      new PoHTTPError(`Failed to deliver parcel: ${reason}`),
+    );
+  });
 });
