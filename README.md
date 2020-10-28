@@ -1,9 +1,5 @@
 # Node.js PoHTTP binding implementation
 
-[![CircleCI](https://circleci.com/gh/relaycorp/relaynet-pohttp-js/tree/master.svg?style=svg)](https://circleci.com/gh/relaycorp/relaynet-pohttp-js/tree/master)
-[![Known Vulnerabilities](https://snyk.io//test/github/relaycorp/relaynet-pohttp-js/badge.svg?targetFile=package.json)](https://snyk.io//test/github/relaycorp/relaynet-pohttp-js?targetFile=package.json)
-[![npm](https://img.shields.io/npm/v/@relaycorp/relaynet-pohttp)](https://www.npmjs.com/package/@relaycorp/relaynet-pohttp)
-
 This is the client-side Node.js implementation of the Relaynet [Parcel Delivery over HTTP (PoHTTP) binding](https://specs.relaynet.link/RS-007).
 
 Since PoHTTP establishes an [_external Parcel Delivery Connection (PDC)_](https://specs.relaynet.link/RS-000#external-pdc), this library is only relevant to developers implementing a gateway (like [Relaycorp's](https://github.com/relaycorp/relaynet-gateway-desktop)) or a [public endpoint](https://specs.relaynet.link/RS-000#addressing).
