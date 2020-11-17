@@ -33,13 +33,6 @@ export async function deliverParcel(
     headers: { 'Content-Type': 'application/vnd.relaynet.parcel' },
     httpsAgent: new https.Agent({ keepAlive: true }),
   });
-
-  // Remove the request and response from the error cause to avoid filling the logs with
-  // unnecessary information. See: https://github.com/axios/axios/issues/2602
-  axiosInstance.interceptors.response.use(undefined, async error =>
-    Promise.reject(new Error(error.message)),
-  );
-
   const response = await postRequest(targetNodeUrl, parcelSerialized, axiosInstance, axiosOptions);
   if (response.status === 307 || response.status === 308) {
     throw new PoHTTPError(`Reached maximum number of redirects (${axiosOptions.maxRedirects})`);
