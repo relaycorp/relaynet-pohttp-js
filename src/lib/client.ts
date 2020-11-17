@@ -65,17 +65,22 @@ async function postRequest(
       timeout: options.timeout,
     });
   } catch (error) {
-    const responseStatus = error.response?.status;
+    if (!error.response) {
+      throw new PoHTTPError(error, 'Failed to deliver parcel');
+    }
+
+    const responseStatus = error.response.status;
     const reason = error.response?.data?.message;
-    if (responseStatus && responseStatus === 403) {
+    if (responseStatus === 403) {
       throw new PoHTTPInvalidParcelError(
         reason ? `Server refused to accept parcel: ${reason}` : 'Server refused to accept parcel',
       );
     }
-    if (!responseStatus || responseStatus < 300 || 400 <= responseStatus) {
+    if (responseStatus < 300 || 400 <= responseStatus) {
       throw new PoHTTPError(
-        error,
-        reason ? `Failed to deliver parcel: ${reason}` : 'Failed to deliver parcel',
+        reason
+          ? `Failed to deliver parcel (HTTP ${responseStatus}): ${reason}`
+          : `Failed to deliver parcel (HTTP ${responseStatus})`,
       );
     }
     response = error.response;

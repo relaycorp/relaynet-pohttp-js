@@ -264,10 +264,22 @@ describe('deliverParcel', () => {
     // @ts-ignore
     stubAxiosPost.mockReset();
     const reason = 'Denied';
-    stubAxiosPost.mockRejectedValueOnce({ response: { data: { message: reason }, status: 400 } });
+    const status = 400;
+    stubAxiosPost.mockRejectedValueOnce({ response: { data: { message: reason }, status } });
 
     await expect(deliverParcel(url, body)).rejects.toEqual(
-      new PoHTTPError(`Failed to deliver parcel: ${reason}`),
+      new PoHTTPError(`Failed to deliver parcel (HTTP ${status}): ${reason}`),
+    );
+  });
+
+  test('HTTP 4XX errors should not mention the reason when absent', async () => {
+    // @ts-ignore
+    stubAxiosPost.mockReset();
+    const status = 400;
+    stubAxiosPost.mockRejectedValueOnce({ response: { data: {}, status } });
+
+    await expect(deliverParcel(url, body)).rejects.toEqual(
+      new PoHTTPError(`Failed to deliver parcel (HTTP ${status})`),
     );
   });
 });
