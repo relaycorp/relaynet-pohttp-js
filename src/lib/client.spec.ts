@@ -16,7 +16,10 @@ describe('deliverParcel', () => {
     stubAxiosPost.mockResolvedValueOnce(stubResponse);
 
     // @ts-ignore
-    jest.spyOn(axios, 'create').mockReturnValueOnce({ post: stubAxiosPost });
+    jest.spyOn(axios, 'create').mockReturnValueOnce({
+      interceptors: { response: { use: jest.fn() } } as any,
+      post: stubAxiosPost,
+    });
   });
 
   afterEach(() => {
@@ -80,6 +83,14 @@ describe('deliverParcel', () => {
     expect(axiosCreateCall[0]).toHaveProperty('httpsAgent');
     const agent = axiosCreateCall[0].httpsAgent;
     expect(agent).toHaveProperty('keepAlive', true);
+  });
+
+  test('An interceptor that removes the request and response should be registered', async () => {
+    ((axios.create as any) as jest.MockInstance<any, any>).mockRestore();
+
+    await expect(deliverParcel('https://httpstat.us/500', body)).rejects.not.toHaveProperty(
+      'jse_cause.config',
+    );
   });
 
   describe('POHTTP_TLS_REQUIRED', () => {
