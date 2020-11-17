@@ -250,13 +250,14 @@ describe('deliverParcel', () => {
     );
   });
 
-  test('Unexpected axios exceptions should be wrapped rethrown', async () => {
+  test('Connection error should be replaced with a simpler error', async () => {
+    // .. That doesn't leak the request or response.
     // @ts-ignore
     stubAxiosPost.mockReset();
     const axiosError = new Error('Haha, in thy face');
     stubAxiosPost.mockRejectedValueOnce(axiosError);
 
-    const expectedError = new PoHTTPError(axiosError, 'Failed to deliver parcel');
+    const expectedError = new PoHTTPError(`Connection error: ${axiosError.message}`);
     await expectPromiseToReject(deliverParcel(url, body), expectedError);
   });
 
