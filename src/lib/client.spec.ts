@@ -1,13 +1,22 @@
+import * as relaynet from '@relaycorp/relaynet-core';
 import axios from 'axios';
 import bufferToArray from 'buffer-to-arraybuffer';
 
-import { expectPromiseToReject, getMockContext, mockEnvVars } from './_test_utils';
+import { expectPromiseToReject, getMockContext, getMockInstance, mockEnvVars } from './_test_utils';
 import { deliverParcel, DeliveryOptions } from './client';
 import PoHTTPError from './PoHTTPError';
 import PoHTTPInvalidParcelError from './PoHTTPInvalidParcelError';
 
+jest.mock('@relaycorp/relaynet-core', () => {
+  const realRelaynet = jest.requireActual('@relaycorp/relaynet-core');
+  return { ...realRelaynet, resolvePublicAddress: jest.fn() };
+});
+
 describe('deliverParcel', () => {
-  const url = 'https://example.com';
+  const host = 'example.com';
+  const targetHost = 'pdc.example.com';
+  const targetPort = 1234;
+  const url = `https://${host}`;
   const body = bufferToArray(Buffer.from('Hey'));
   const stubResponse = { status: 200 };
   const stubAxiosPost = jest.fn();
@@ -15,12 +24,38 @@ describe('deliverParcel', () => {
   beforeEach(() => {
     stubAxiosPost.mockResolvedValueOnce(stubResponse);
 
-    // @ts-ignore
-    jest.spyOn(axios, 'create').mockReturnValueOnce({ post: stubAxiosPost });
+    jest.spyOn(axios, 'create').mockReturnValueOnce({ post: stubAxiosPost } as any);
+  });
+
+  beforeEach(() => {
+    getMockInstance(relaynet.resolvePublicAddress).mockResolvedValueOnce({
+      host: targetHost,
+      port: targetPort,
+    });
   });
 
   afterEach(() => {
     jest.restoreAllMocks();
+  });
+
+  test('Target URL should be resolved', async () => {
+    await deliverParcel(url, body);
+
+    expect(stubAxiosPost).toBeCalledTimes(1);
+    const postCallArgs = getMockContext(stubAxiosPost).calls[0];
+    expect(postCallArgs[0]).toEqual(`https://${targetHost}:${targetPort}`);
+
+    expect(relaynet.resolvePublicAddress).toBeCalledWith(host, relaynet.BindingType.PDC);
+  });
+
+  test('Target URL should be used as is if address resolution failed', async () => {
+    getMockInstance(relaynet.resolvePublicAddress).mockResolvedValueOnce(null);
+
+    await deliverParcel(url, body);
+
+    expect(stubAxiosPost).toBeCalledTimes(1);
+    const postCallArgs = getMockContext(stubAxiosPost).calls[0];
+    expect(postCallArgs[0]).toEqual(`https://${targetHost}:${targetPort}`);
   });
 
   test('Body should be POSTed to the specified URL', async () => {
@@ -88,7 +123,7 @@ describe('deliverParcel', () => {
 
       await expectPromiseToReject(
         deliverParcel('http://example.com', body),
-        new Error('Can only POST to HTTPS URLs (got http://example.com)'),
+        new Error(`Can only POST to HTTPS URLs (got http://${targetHost}:${targetPort})`),
       );
     });
 
@@ -98,6 +133,8 @@ describe('deliverParcel', () => {
       await deliverParcel('http://example.com', body);
 
       expect(stubAxiosPost).toBeCalledTimes(1);
+      const postCallArgs = getMockContext(stubAxiosPost).calls[0];
+      expect(postCallArgs[0]).toEqual(`http://${targetHost}:${targetPort}`);
     });
 
     test('Non-TLS URLs should be refused if POHTTP_TLS_REQUIRED=true', async () => {
@@ -105,7 +142,7 @@ describe('deliverParcel', () => {
 
       await expectPromiseToReject(
         deliverParcel('http://example.com', body),
-        new Error('Can only POST to HTTPS URLs (got http://example.com)'),
+        new Error(`Can only POST to HTTPS URLs (got http://${targetHost}:${targetPort})`),
       );
     });
   });
