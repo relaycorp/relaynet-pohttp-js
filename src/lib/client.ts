@@ -1,3 +1,4 @@
+import { BindingType, resolvePublicAddress } from '@relaycorp/relaynet-core';
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import { get as getEnvVar } from 'env-var';
 import * as https from 'https';
@@ -33,7 +34,8 @@ export async function deliverParcel(
     headers: { 'Content-Type': 'application/vnd.relaynet.parcel' },
     httpsAgent: new https.Agent({ keepAlive: true }),
   });
-  const response = await postRequest(targetNodeUrl, parcelSerialized, axiosInstance, axiosOptions);
+  const url = await resolveURL(targetNodeUrl);
+  const response = await postRequest(url, parcelSerialized, axiosInstance, axiosOptions);
   if (response.status === 307 || response.status === 308) {
     throw new PoHTTPError(`Reached maximum number of redirects (${axiosOptions.maxRedirects})`);
   }
@@ -44,6 +46,12 @@ interface SupportedAxiosRequestConfig {
   readonly headers: { readonly [key: string]: any };
   readonly maxRedirects: number;
   readonly timeout: number;
+}
+
+async function resolveURL(targetNodeUrl: string): Promise<string> {
+  const urlParts = new URL(targetNodeUrl);
+  const address = await resolvePublicAddress(urlParts.host, BindingType.PDC);
+  return address ? `${urlParts.protocol}//${address.host}:${address.port}` : targetNodeUrl;
 }
 
 async function postRequest(

@@ -14,8 +14,12 @@ export async function expectPromiseToReject(
   throw new Error(`Expected promise to throw error ${expectedError}`);
 }
 
+export function getMockInstance(mockedObject: any): jest.MockInstance<any, any> {
+  return mockedObject as any;
+}
+
 export function getMockContext(mockedObject: any): jest.MockContext<any, any> {
-  const mockInstance = (mockedObject as unknown) as jest.MockInstance<any, any>;
+  const mockInstance = getMockInstance(mockedObject);
   return mockInstance.mock;
 }
 
