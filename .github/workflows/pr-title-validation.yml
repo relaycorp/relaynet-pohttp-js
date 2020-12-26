@@ -1,4 +1,4 @@
-name: "Validate PR title"
+name: "Require PR title to comply with Conventional Commits"
 on:
   pull_request:
     types:
