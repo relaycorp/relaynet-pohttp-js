@@ -52,7 +52,7 @@
     "@relaycorp/shared-config": "^1.4.7",
     "@types/asn1js": "^2.0.0",
     "@types/jest": "^24.0.15",
-    "@types/verror": "^1.10.3",
+    "@types/verror": "^1.10.4",
     "buffer-to-arraybuffer": "0.0.5",
     "jest": "^25.5.2",
     "jest-date-mock": "^1.0.8",
@@ -61,10 +61,10 @@
     "prettier": "^1.19.1",
     "trash-cli": "^1.4.0",
     "ts-jest": "^26.1.2",
-    "ts-node": "^8.9.1",
+    "ts-node": "^9.1.1",
     "tslint": "^5.18.0",
     "typedoc": "^0.15.8",
-    "typescript": "^3.8.3"
+    "typescript": "^3.9.7"
   },
   "dependencies": {
     "@relaycorp/relaynet-core": "^1.42.1",
