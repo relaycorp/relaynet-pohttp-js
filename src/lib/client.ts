@@ -60,9 +60,7 @@ async function postRequest(
   axiosInstance: AxiosInstance,
   options: SupportedAxiosRequestConfig,
 ): Promise<AxiosResponse> {
-  const isTlsRequired = getEnvVar('POHTTP_TLS_REQUIRED')
-    .default('true')
-    .asBool();
+  const isTlsRequired = getEnvVar('POHTTP_TLS_REQUIRED').default('true').asBool();
   if (isTlsRequired && url.startsWith('http:')) {
     throw new PoHTTPError(`Can only POST to HTTPS URLs (got ${url})`);
   }
