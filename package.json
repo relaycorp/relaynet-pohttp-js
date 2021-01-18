@@ -63,7 +63,7 @@
     "ts-jest": "^26.4.4",
     "ts-node": "^9.1.1",
     "tslint": "^5.18.0",
-    "typedoc": "^0.20.10",
+    "typedoc": "^0.20.16",
     "typescript": "^3.9.7"
   },
   "dependencies": {
