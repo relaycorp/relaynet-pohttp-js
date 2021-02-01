@@ -63,11 +63,11 @@
     "ts-jest": "^26.5.0",
     "ts-node": "^9.1.1",
     "tslint": "^5.18.0",
-    "typedoc": "^0.20.18",
+    "typedoc": "^0.20.20",
     "typescript": "^3.9.7"
   },
   "dependencies": {
-    "@relaycorp/relaynet-core": "^1.42.1",
+    "@relaycorp/relaynet-core": "^1.42.4",
     "axios": "^0.21.1",
     "env-var": "^7.0.0"
   },
