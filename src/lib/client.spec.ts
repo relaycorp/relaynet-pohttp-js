@@ -67,7 +67,7 @@ describe('deliverParcel', () => {
     expect(postCallArgs[1]).toBe(body);
   });
 
-  test('Request content type should be application/vnd.relaynet.parcel', async () => {
+  test('Request content type should be application/vnd.awala.parcel', async () => {
     jest.spyOn(axios, 'create');
 
     await deliverParcel(url, body);
@@ -76,7 +76,7 @@ describe('deliverParcel', () => {
     const axiosCreateCall = getMockContext(axios.create).calls[0];
     expect(axiosCreateCall[0]).toHaveProperty(
       'headers.Content-Type',
-      'application/vnd.relaynet.parcel',
+      'application/vnd.awala.parcel',
     );
   });
 
