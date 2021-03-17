@@ -67,7 +67,7 @@
     "typescript": "^3.9.9"
   },
   "dependencies": {
-    "@relaycorp/relaynet-core": "^1.42.6",
+    "@relaycorp/relaynet-core": "^1.42.7",
     "axios": "^0.21.1",
     "env-var": "^7.0.0"
   },
