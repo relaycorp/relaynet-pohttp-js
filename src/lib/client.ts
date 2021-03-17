@@ -31,7 +31,7 @@ export async function deliverParcel(
     timeout: options.timeout ?? 3000,
   };
   const axiosInstance = axios.create({
-    headers: { 'Content-Type': 'application/vnd.relaynet.parcel' },
+    headers: { 'Content-Type': 'application/vnd.awala.parcel' },
     httpsAgent: new https.Agent({ keepAlive: true }),
   });
   const url = await resolveURL(targetNodeUrl);
