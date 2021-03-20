@@ -4,6 +4,7 @@ import bufferToArray from 'buffer-to-arraybuffer';
 
 import { expectPromiseToReject, getMockContext, getMockInstance, mockEnvVars } from './_test_utils';
 import { deliverParcel, DeliveryOptions } from './client';
+import PoHTTPClientBindingError from './PoHTTPClientBindingError';
 import PoHTTPError from './PoHTTPError';
 import PoHTTPInvalidParcelError from './PoHTTPInvalidParcelError';
 
@@ -203,14 +204,13 @@ describe('deliverParcel', () => {
       expect(postCall2Args[0]).toEqual(stubRedirectUrl);
     });
 
-    test('Responses with unsupported 3XX status codes should be returned as is', async () => {
+    test('Responses with unsupported 3XX status codes should result in errors', async () => {
       const redirectResponse = { ...stubRedirectResponse, status: 302 };
       stubAxiosPost.mockRejectedValueOnce({ response: redirectResponse });
 
-      const response = await deliverParcel(url, body);
-
-      expect(stubAxiosPost).toBeCalledTimes(1);
-      expect(response).toBe(redirectResponse);
+      await expect(deliverParcel(url, body)).rejects.toEqual(
+        new PoHTTPError('Failed to deliver parcel (HTTP 302)'),
+      );
     });
 
     test('Original arguments should be honored when following redirects', async () => {
@@ -272,7 +272,7 @@ describe('deliverParcel', () => {
     stubAxiosPost.mockRejectedValueOnce({ response: { status: 403 } });
 
     await expect(deliverParcel(url, body)).rejects.toEqual(
-      new PoHTTPInvalidParcelError('Server refused to accept parcel'),
+      new PoHTTPInvalidParcelError('Server rejected parcel'),
     );
   });
 
@@ -283,7 +283,30 @@ describe('deliverParcel', () => {
     stubAxiosPost.mockRejectedValueOnce({ response: { data: { message: reason }, status: 403 } });
 
     await expect(deliverParcel(url, body)).rejects.toEqual(
-      new PoHTTPInvalidParcelError(`Server refused to accept parcel: ${reason}`),
+      new PoHTTPInvalidParcelError(`Server rejected parcel: ${reason}`),
+    );
+  });
+
+  test('HTTP 40X should throw a PoHTTPClientBindingError', async () => {
+    // @ts-ignore
+    stubAxiosPost.mockReset();
+    stubAxiosPost.mockRejectedValueOnce({ response: { status: 400 } });
+
+    await expect(deliverParcel(url, body)).rejects.toEqual(
+      new PoHTTPClientBindingError('Server rejected request due to protocol violation (HTTP 400)'),
+    );
+  });
+
+  test('PoHTTPClientBindingError should mention the reason if available', async () => {
+    // @ts-ignore
+    stubAxiosPost.mockReset();
+    const reason = 'Denied';
+    stubAxiosPost.mockRejectedValueOnce({ response: { data: { message: reason }, status: 400 } });
+
+    await expect(deliverParcel(url, body)).rejects.toEqual(
+      new PoHTTPClientBindingError(
+        `Server rejected request due to protocol violation (HTTP 400): ${reason}`,
+      ),
     );
   });
 
@@ -298,11 +321,11 @@ describe('deliverParcel', () => {
     await expectPromiseToReject(deliverParcel(url, body), expectedError);
   });
 
-  test('HTTP 4XX errors should mention the reason if available', async () => {
+  test('HTTP 5XX errors should mention the reason if available', async () => {
     // @ts-ignore
     stubAxiosPost.mockReset();
     const reason = 'Denied';
-    const status = 400;
+    const status = 500;
     stubAxiosPost.mockRejectedValueOnce({ response: { data: { message: reason }, status } });
 
     await expect(deliverParcel(url, body)).rejects.toEqual(
@@ -310,10 +333,10 @@ describe('deliverParcel', () => {
     );
   });
 
-  test('HTTP 4XX errors should not mention the reason when absent', async () => {
+  test('HTTP 5XX errors should not mention the reason when absent', async () => {
     // @ts-ignore
     stubAxiosPost.mockReset();
-    const status = 400;
+    const status = 500;
     stubAxiosPost.mockRejectedValueOnce({ response: { data: {}, status } });
 
     await expect(deliverParcel(url, body)).rejects.toEqual(
