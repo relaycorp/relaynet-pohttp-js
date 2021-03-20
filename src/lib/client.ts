@@ -3,6 +3,7 @@ import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import { get as getEnvVar } from 'env-var';
 import * as https from 'https';
 
+import PoHTTPClientBindingError from './PoHTTPClientBindingError';
 import PoHTTPError from './PoHTTPError';
 import PoHTTPInvalidParcelError from './PoHTTPInvalidParcelError';
 
@@ -81,10 +82,17 @@ async function postRequest(
     const reason = error.response.data?.message;
     if (responseStatus === 403) {
       throw new PoHTTPInvalidParcelError(
-        reason ? `Server refused to accept parcel: ${reason}` : 'Server refused to accept parcel',
+        reason ? `Server rejected parcel: ${reason}` : 'Server rejected parcel',
       );
     }
-    if (responseStatus < 300 || 400 <= responseStatus) {
+    if (400 <= responseStatus && responseStatus < 500) {
+      throw new PoHTTPClientBindingError(
+        reason
+          ? `Server rejected request due to protocol violation (HTTP ${responseStatus}): ${reason}`
+          : `Server rejected request due to protocol violation (HTTP ${responseStatus})`,
+      );
+    }
+    if (!isStatusCodeValidRedirect(responseStatus) || 500 <= responseStatus) {
       throw new PoHTTPError(
         reason
           ? `Failed to deliver parcel (HTTP ${responseStatus}): ${reason}`
@@ -94,7 +102,7 @@ async function postRequest(
     response = error.response;
   }
 
-  if ((response.status === 307 || response.status === 308) && 0 < options.maxRedirects) {
+  if (isStatusCodeValidRedirect(response.status) && 0 < options.maxRedirects) {
     // Axios doesn't support 307 or 308 redirects: https://github.com/axios/axios/issues/2429,
     // so we have to follow the redirect manually.
     return postRequest(response.headers.location, body, axiosInstance, {
@@ -104,4 +112,8 @@ async function postRequest(
   }
 
   return response;
+}
+
+function isStatusCodeValidRedirect(statusCode: number): boolean {
+  return statusCode === 307 || statusCode === 308;
 }
