@@ -45,8 +45,7 @@
   "homepage": "https://docs.relaycorp.tech/relaynet-pohttp-js/",
   "prettier": "@relaycorp/shared-config/.prettierrc.json",
   "publishConfig": {
-    "access": "public",
-    "tag": "dev"
+    "access": "public"
   },
   "devDependencies": {
     "@relaycorp/shared-config": "^1.4.13",
