@@ -1,4 +1,4 @@
-import { BindingType, resolvePublicAddress } from '@relaycorp/relaynet-core';
+import { BindingType, PublicNodeAddress, resolvePublicAddress } from '@relaycorp/relaynet-core';
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import { get as getEnvVar } from 'env-var';
 import * as https from 'https';
@@ -51,7 +51,12 @@ interface SupportedAxiosRequestConfig {
 
 async function resolveURL(targetNodeUrl: string): Promise<string> {
   const urlParts = new URL(targetNodeUrl);
-  const address = await resolvePublicAddress(urlParts.host, BindingType.PDC);
+  let address: PublicNodeAddress | null;
+  try {
+    address = await resolvePublicAddress(urlParts.host, BindingType.PDC);
+  } catch (err) {
+    throw new PoHTTPError(err, 'Public address resolution failed');
+  }
   return address ? `${urlParts.protocol}//${address.host}:${address.port}` : targetNodeUrl;
 }
 
@@ -65,7 +70,6 @@ async function postRequest(
   if (isTlsRequired && url.startsWith('http:')) {
     throw new PoHTTPError(`Can only POST to HTTPS URLs (got ${url})`);
   }
-  // tslint:disable-next-line:no-let
   let response;
   try {
     response = await axiosInstance.post(url, body, {

@@ -29,7 +29,8 @@ describe('deliverParcel', () => {
   });
 
   beforeEach(() => {
-    getMockInstance(relaynet.resolvePublicAddress).mockResolvedValueOnce({
+    getMockInstance(relaynet.resolvePublicAddress).mockReset();
+    getMockInstance(relaynet.resolvePublicAddress).mockResolvedValue({
       host: targetHost,
       port: targetPort,
     });
@@ -42,30 +43,39 @@ describe('deliverParcel', () => {
   test('Target URL should be resolved', async () => {
     await deliverParcel(url, body);
 
-    expect(stubAxiosPost).toBeCalledTimes(1);
-    const postCallArgs = getMockContext(stubAxiosPost).calls[0];
-    expect(postCallArgs[0]).toEqual(`https://${targetHost}:${targetPort}`);
+    expect(stubAxiosPost).toBeCalledWith(
+      `https://${targetHost}:${targetPort}`,
+      expect.anything(),
+      expect.anything(),
+    );
 
     expect(relaynet.resolvePublicAddress).toBeCalledWith(host, relaynet.BindingType.PDC);
   });
 
-  test('Target URL should be used as is if address resolution failed', async () => {
-    getMockInstance(relaynet.resolvePublicAddress).mockResolvedValueOnce(null);
+  test('Target URL should be used as is if public address record does not exist', async () => {
+    getMockInstance(relaynet.resolvePublicAddress).mockResolvedValue(null);
 
     await deliverParcel(url, body);
 
-    expect(stubAxiosPost).toBeCalledTimes(1);
-    const postCallArgs = getMockContext(stubAxiosPost).calls[0];
-    expect(postCallArgs[0]).toEqual(`https://${targetHost}:${targetPort}`);
+    expect(stubAxiosPost).toBeCalledWith(url, expect.anything(), expect.anything());
   });
 
-  test('Body should be POSTed to the specified URL', async () => {
+  test('Parcel should be request body', async () => {
     await deliverParcel(url, body);
 
-    expect(stubAxiosPost).toBeCalledTimes(1);
-    const postCallArgs = getMockContext(stubAxiosPost).calls[0];
-    expect(postCallArgs[0]).toEqual(url);
-    expect(postCallArgs[1]).toBe(body);
+    expect(stubAxiosPost).toBeCalledWith(expect.anything(), body, expect.anything());
+  });
+
+  test('Public address resolution errors should be wrapped', async () => {
+    const error = new Error('DNSSEC failed');
+    getMockInstance(relaynet.resolvePublicAddress).mockRejectedValue(error);
+
+    await expectPromiseToReject(
+      deliverParcel(url, body),
+      new PoHTTPError(`Public address resolution failed: ${error.message}`),
+    );
+
+    expect(stubAxiosPost).not.toBeCalled();
   });
 
   test('Request content type should be application/vnd.awala.parcel', async () => {
