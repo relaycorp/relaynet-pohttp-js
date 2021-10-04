@@ -67,7 +67,7 @@
   },
   "dependencies": {
     "@relaycorp/relaynet-core": "^1.49.1",
-    "axios": "^0.21.1",
+    "axios": "^0.22.0",
     "env-var": "^7.0.1"
   },
   "peerDependencies": {
