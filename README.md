@@ -21,25 +21,21 @@ relaynet-pohttp-js is meant to be used with the [core library](https://www.npmjs
 ```javascript
 import { deliverParcel } from '@relaycorp/relaynet-pohttp';
 
-const relayAddress = 'rng+https://relay.relaycorp.tech';
-
 async function main() {
   // `parcelSerialized` is the ArrayBuffer representation of the parcel as a RAMF message
   const parcelSerialized = await yourFunctionToRetrieveTheParcel();
 
-  await deliverParcel('https://ping.relaycorp.tech', parcelSerialized, {
-    relayAddress,
-  });
+  await deliverParcel('https://ping.relaycorp.tech', parcelSerialized);
 }
 ```
 
-By default, a timeout of 3 seconds will be used and up to 3 consecutive redirects would be followed. `deliverParcel` takes an optional `options` argument to customize these and other options.
+By default, a timeout of 3 seconds will be used and up to 3 consecutive redirects would be followed. `deliverParcel()` takes an optional `options` argument to customize these and other options.
 
 TypeScript type declarations are included with this library.
 
 ## Use in integration or functional tests
 
-Per the Relaynet specs, bindings like PoHTTP must be used over TLS, but this validation can be turned off in test suites that send requests to a mock HTTP server by setting the environment variable `POHTTP_TLS_REQUIRED` to `false`.
+Per the Relaynet specs, bindings like PoHTTP must be used over TLS, but this validation can be turned off in test suites that send requests to a mock HTTP server by passing the options `useTls=false` to `deliverParcel()`.
 
 ## Support
 

@@ -2,7 +2,7 @@ import * as relaynet from '@relaycorp/relaynet-core';
 import axios from 'axios';
 import bufferToArray from 'buffer-to-arraybuffer';
 
-import { expectPromiseToReject, getMockContext, getMockInstance, mockEnvVars } from './_test_utils';
+import { expectPromiseToReject, getMockContext, getMockInstance } from './_test_utils';
 import { deliverParcel, DeliveryOptions } from './client';
 import PoHTTPClientBindingError from './PoHTTPClientBindingError';
 import PoHTTPError from './PoHTTPError';
@@ -120,8 +120,8 @@ describe('deliverParcel', () => {
     expect(agent).toHaveProperty('keepAlive', true);
   });
 
-  describe('TLS enablement option', () => {
-    test('URL resolution should use HTTPS if option is unspecified', async () => {
+  describe('TLS', () => {
+    test('URL resolution should use HTTPS if useTls is unspecified', async () => {
       await deliverParcel(host, body);
 
       expect(stubAxiosPost).toBeCalledWith(
@@ -131,8 +131,8 @@ describe('deliverParcel', () => {
       );
     });
 
-    test('URL resolution should use HTTPS if option is enabled', async () => {
-      await deliverParcel(host, body, { enableTls: true });
+    test('URL resolution should use HTTPS if useTls is enabled', async () => {
+      await deliverParcel(host, body, { useTls: true });
 
       expect(stubAxiosPost).toBeCalledWith(
         expect.stringMatching(/^https:/),
@@ -141,47 +141,13 @@ describe('deliverParcel', () => {
       );
     });
 
-    test('URL resolution should use HTTP if option is disabled', async () => {
-      mockEnvVars({ POHTTP_TLS_REQUIRED: 'false' });
-
-      await deliverParcel(host, body, { enableTls: false });
+    test('URL resolution should use HTTP if useTls is disabled', async () => {
+      await deliverParcel(host, body, { useTls: false });
 
       expect(stubAxiosPost).toBeCalledWith(
         expect.stringMatching(/^http:/),
         expect.anything(),
         expect.anything(),
-      );
-    });
-  });
-
-  describe('POHTTP_TLS_REQUIRED', () => {
-    const nonTlsUrl = 'http://example.com';
-
-    test('Non-TLS URLs should be refused if POHTTP_TLS_REQUIRED is undefined', async () => {
-      mockEnvVars({});
-
-      await expectPromiseToReject(
-        deliverParcel(nonTlsUrl, body),
-        new Error(`Can only POST to HTTPS URLs (got ${nonTlsUrl})`),
-      );
-    });
-
-    test('Non-TLS URLs should be allowed if POHTTP_TLS_REQUIRED=false', async () => {
-      mockEnvVars({ POHTTP_TLS_REQUIRED: 'false' });
-
-      await deliverParcel(nonTlsUrl, body);
-
-      expect(stubAxiosPost).toBeCalledTimes(1);
-      const postCallArgs = getMockContext(stubAxiosPost).calls[0];
-      expect(postCallArgs[0]).toEqual(nonTlsUrl);
-    });
-
-    test('Non-TLS URLs should be refused if POHTTP_TLS_REQUIRED=true', async () => {
-      mockEnvVars({ POHTTP_TLS_REQUIRED: 'true' });
-
-      await expectPromiseToReject(
-        deliverParcel(nonTlsUrl, body),
-        new Error(`Can only POST to HTTPS URLs (got ${nonTlsUrl})`),
       );
     });
   });
@@ -212,7 +178,6 @@ describe('deliverParcel', () => {
     };
 
     beforeEach(() => {
-      // @ts-ignore
       stubAxiosPost.mockReset();
     });
 
@@ -265,6 +230,58 @@ describe('deliverParcel', () => {
         maxRedirects: 0,
         timeout: options.timeout,
       });
+    });
+
+    test('Non-TLS redirects should be refused if TLS is unspecified', async () => {
+      stubAxiosPost.mockRejectedValueOnce({
+        response: {
+          ...stubRedirectResponse,
+          headers: { location: `http://${targetHost}/foo` },
+        },
+      });
+
+      await expect(deliverParcel(url, body)).rejects.toThrowWithMessage(
+        PoHTTPError,
+        /^Can only POST to HTTPS URLs/,
+      );
+    });
+
+    test('Non-TLS redirects should be refused if TLS is used', async () => {
+      stubAxiosPost.mockRejectedValueOnce({
+        response: {
+          ...stubRedirectResponse,
+          headers: { location: `http://${targetHost}/foo` },
+        },
+      });
+
+      await expect(deliverParcel(url, body, { useTls: true })).rejects.toThrowWithMessage(
+        PoHTTPError,
+        /^Can only POST to HTTPS URLs/,
+      );
+    });
+
+    test('TLS redirects should be allowed even if TLS is not used', async () => {
+      stubAxiosPost.mockRejectedValueOnce({
+        response: {
+          ...stubRedirectResponse,
+          headers: { location: `https://${targetHost}/foo` },
+        },
+      });
+      stubAxiosPost.mockResolvedValueOnce(stubResponse);
+
+      await deliverParcel(url, body, { useTls: false });
+    });
+
+    test('Non-TLS redirects should be allowed if TLS is not used', async () => {
+      stubAxiosPost.mockRejectedValueOnce({
+        response: {
+          ...stubRedirectResponse,
+          headers: { location: `http://${targetHost}/foo` },
+        },
+      });
+      stubAxiosPost.mockResolvedValueOnce(stubResponse);
+
+      await deliverParcel(url, body, { useTls: false });
     });
 
     test('Redirects should be followed up to a maximum of 3 times by default', async () => {

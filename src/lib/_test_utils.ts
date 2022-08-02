@@ -1,5 +1,3 @@
-import envVar from 'env-var';
-
 export async function expectPromiseToReject(
   promise: Promise<any>,
   expectedError: Error,
@@ -21,13 +19,4 @@ export function getMockInstance(mockedObject: any): jest.MockInstance<any, any> 
 export function getMockContext(mockedObject: any): jest.MockContext<any, any> {
   const mockInstance = getMockInstance(mockedObject);
   return mockInstance.mock;
-}
-
-export function mockEnvVars(envVars: { readonly [key: string]: string | undefined }): void {
-  jest.spyOn(envVar, 'get').mockImplementation((...args: readonly any[]) => {
-    const originalEnvVar = jest.requireActual('env-var');
-    const env = originalEnvVar.from(envVars);
-
-    return env.get(...args);
-  });
 }

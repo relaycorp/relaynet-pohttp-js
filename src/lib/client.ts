@@ -1,6 +1,5 @@
 import { BindingType, PublicNodeAddress, resolveInternetAddress } from '@relaycorp/relaynet-core';
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
-import { get as getEnvVar } from 'env-var';
 import * as https from 'https';
 
 import PoHTTPClientBindingError from './PoHTTPClientBindingError';
@@ -8,7 +7,7 @@ import PoHTTPError from './PoHTTPError';
 import PoHTTPInvalidParcelError from './PoHTTPInvalidParcelError';
 
 export interface DeliveryOptions {
-  readonly enableTls: boolean;
+  readonly useTls: boolean;
   readonly maxRedirects: number;
   readonly timeout: number;
 }
@@ -34,8 +33,9 @@ export async function deliverParcel(
     headers: { 'Content-Type': 'application/vnd.awala.parcel' },
     httpsAgent: new https.Agent({ keepAlive: true }),
   });
-  const url = await resolveURL(recipientInternetAddressOrURL, options.enableTls);
-  const response = await postRequest(url, parcelSerialized, axiosInstance, axiosOptions);
+  const useTls = options.useTls ?? true;
+  const url = await resolveURL(recipientInternetAddressOrURL, useTls);
+  const response = await postRequest(url, parcelSerialized, axiosInstance, axiosOptions, useTls);
   if (response.status === 307 || response.status === 308) {
     throw new PoHTTPError(`Reached maximum number of redirects (${axiosOptions.maxRedirects})`);
   }
@@ -47,7 +47,7 @@ interface SupportedAxiosRequestConfig {
   readonly timeout: number;
 }
 
-async function resolveURL(targetNodeUrl: string, enableTls?: boolean): Promise<string> {
+async function resolveURL(targetNodeUrl: string, useTls: boolean): Promise<string> {
   if (isURL(targetNodeUrl)) {
     return targetNodeUrl;
   }
@@ -59,7 +59,7 @@ async function resolveURL(targetNodeUrl: string, enableTls?: boolean): Promise<s
     throw new PoHTTPError(err as Error, 'Public address resolution failed');
   }
   const hostAndPort = address ? `${address.host}:${address.port}` : targetNodeUrl;
-  const scheme = enableTls !== false ? 'https' : 'http';
+  const scheme = useTls ? 'https' : 'http';
   return `${scheme}://${hostAndPort}`;
 }
 
@@ -78,9 +78,9 @@ async function postRequest(
   body: ArrayBuffer | Buffer,
   axiosInstance: AxiosInstance,
   options: SupportedAxiosRequestConfig,
+  useTls: boolean,
 ): Promise<AxiosResponse> {
-  const isTlsRequired = getEnvVar('POHTTP_TLS_REQUIRED').default('true').asBool();
-  if (isTlsRequired && url.startsWith('http:')) {
+  if (useTls && url.startsWith('http:')) {
     throw new PoHTTPError(`Can only POST to HTTPS URLs (got ${url})`);
   }
   let response;
@@ -118,10 +118,13 @@ async function postRequest(
   if (isStatusCodeValidRedirect(response.status) && 0 < options.maxRedirects) {
     // Axios doesn't support 307 or 308 redirects: https://github.com/axios/axios/issues/2429,
     // so we have to follow the redirect manually.
-    return postRequest(response.headers.location, body, axiosInstance, {
-      ...options,
-      maxRedirects: options.maxRedirects - 1,
-    });
+    return postRequest(
+      response.headers.location,
+      body,
+      axiosInstance,
+      { ...options, maxRedirects: options.maxRedirects - 1 },
+      useTls,
+    );
   }
 
   return response;
