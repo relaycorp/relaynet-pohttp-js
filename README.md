@@ -25,7 +25,7 @@ async function main() {
   // `parcelSerialized` is the ArrayBuffer representation of the parcel as a RAMF message
   const parcelSerialized = await yourFunctionToRetrieveTheParcel();
 
-  await deliverParcel('https://ping.relaycorp.tech', parcelSerialized);
+  await deliverParcel('ping.relaycorp.tech', parcelSerialized);
 }
 ```
 
