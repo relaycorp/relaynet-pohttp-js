@@ -48,7 +48,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@relaycorp/relaynet-core": "^1.81.10",
+    "@relaycorp/relaynet-core": "^1.81.11",
     "axios": "^0.27.2",
     "env-var": "^7.1.1"
   },
