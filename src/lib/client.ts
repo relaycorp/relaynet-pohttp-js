@@ -55,7 +55,7 @@ async function resolveURL(targetNodeUrl: string): Promise<string> {
   try {
     address = await resolvePublicAddress(urlParts.host, BindingType.PDC);
   } catch (err) {
-    throw new PoHTTPError(err, 'Public address resolution failed');
+    throw new PoHTTPError(err as Error, 'Public address resolution failed');
   }
   return address ? `${urlParts.protocol}//${address.host}:${address.port}` : targetNodeUrl;
 }
@@ -77,7 +77,7 @@ async function postRequest(
       maxRedirects: 0,
       timeout: options.timeout,
     });
-  } catch (error) {
+  } catch (error: any) {
     if (!error.response) {
       throw new PoHTTPError(`Connection error: ${error.message}`);
     }
