@@ -48,7 +48,7 @@
     "access": "public"
   },
   "devDependencies": {
-    "@relaycorp/shared-config": "^1.6.1",
+    "@relaycorp/shared-config": "^1.9.1",
     "@types/asn1js": "^3.0.7",
     "@types/jest": "^27.5.0",
     "@types/verror": "^1.10.6",
