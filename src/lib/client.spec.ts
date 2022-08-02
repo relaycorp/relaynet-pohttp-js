@@ -91,25 +91,6 @@ describe('deliverParcel', () => {
     );
   });
 
-  describe('Relay address', () => {
-    test('Relay address should be included if specified', async () => {
-      const relayAddress = 'relay-address';
-      await deliverParcel(url, body, { gatewayAddress: relayAddress });
-
-      expect(stubAxiosPost).toBeCalledTimes(1);
-      const postCallArgs = getMockContext(stubAxiosPost).calls[0];
-      expect(postCallArgs[2]).toHaveProperty('headers.X-Awala-Gateway', relayAddress);
-    });
-
-    test('Relay address should be absent by default', async () => {
-      await deliverParcel(url, body);
-
-      expect(stubAxiosPost).toBeCalledTimes(1);
-      const postCallArgs = getMockContext(stubAxiosPost).calls[0];
-      expect(postCallArgs[2]).not.toHaveProperty('headers.X-Awala-Gateway');
-    });
-  });
-
   test('Axios response should be returned', async () => {
     const response = await deliverParcel(url, body);
 
@@ -227,14 +208,13 @@ describe('deliverParcel', () => {
       stubAxiosPost.mockRejectedValueOnce({ response: stubRedirectResponse });
       stubAxiosPost.mockResolvedValueOnce({ status: 202 });
 
-      const options: Partial<DeliveryOptions> = { gatewayAddress: 'the address', timeout: 2 };
+      const options: Partial<DeliveryOptions> = { timeout: 2 };
       await deliverParcel(url, body, options);
 
       expect(stubAxiosPost).toBeCalledTimes(2);
       const postCall2Args = getMockContext(stubAxiosPost).calls[1];
       expect(postCall2Args[1]).toEqual(body);
       expect(postCall2Args[2]).toEqual({
-        headers: { 'X-Awala-Gateway': options.gatewayAddress },
         maxRedirects: 0,
         timeout: options.timeout,
       });

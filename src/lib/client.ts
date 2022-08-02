@@ -8,7 +8,6 @@ import PoHTTPError from './PoHTTPError';
 import PoHTTPInvalidParcelError from './PoHTTPInvalidParcelError';
 
 export interface DeliveryOptions {
-  readonly gatewayAddress: string;
   readonly maxRedirects: number;
   readonly timeout: number;
 }
@@ -27,7 +26,6 @@ export async function deliverParcel(
   options: Partial<DeliveryOptions> = {},
 ): Promise<AxiosResponse> {
   const axiosOptions = {
-    headers: options.gatewayAddress ? { 'X-Awala-Gateway': options.gatewayAddress } : {},
     maxRedirects: options.maxRedirects ?? 3,
     timeout: options.timeout ?? 3000,
   };
@@ -44,7 +42,6 @@ export async function deliverParcel(
 }
 
 interface SupportedAxiosRequestConfig {
-  readonly headers: { readonly [key: string]: any };
   readonly maxRedirects: number;
   readonly timeout: number;
 }
@@ -72,11 +69,7 @@ async function postRequest(
   }
   let response;
   try {
-    response = await axiosInstance.post(url, body, {
-      headers: options.headers,
-      maxRedirects: 0,
-      timeout: options.timeout,
-    });
+    response = await axiosInstance.post(url, body, { maxRedirects: 0, timeout: options.timeout });
   } catch (error) {
     if (!error.response) {
       throw new PoHTTPError(`Connection error: ${error.message}`);
