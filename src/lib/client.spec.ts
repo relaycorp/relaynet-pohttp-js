@@ -10,7 +10,7 @@ import PoHTTPInvalidParcelError from './PoHTTPInvalidParcelError';
 
 jest.mock('@relaycorp/relaynet-core', () => {
   const realRelaynet = jest.requireActual('@relaycorp/relaynet-core');
-  return { ...realRelaynet, resolvePublicAddress: jest.fn() };
+  return { ...realRelaynet, resolveInternetAddress: jest.fn() };
 });
 
 describe('deliverParcel', () => {
@@ -29,8 +29,8 @@ describe('deliverParcel', () => {
   });
 
   beforeEach(() => {
-    getMockInstance(relaynet.resolvePublicAddress).mockReset();
-    getMockInstance(relaynet.resolvePublicAddress).mockResolvedValue({
+    getMockInstance(relaynet.resolveInternetAddress).mockReset();
+    getMockInstance(relaynet.resolveInternetAddress).mockResolvedValue({
       host: targetHost,
       port: targetPort,
     });
@@ -40,8 +40,14 @@ describe('deliverParcel', () => {
     jest.restoreAllMocks();
   });
 
-  test('Target URL should be resolved', async () => {
+  test('Recipient should be used as is if it is a URL already', async () => {
     await deliverParcel(url, body);
+
+    expect(stubAxiosPost).toBeCalledWith(url, expect.anything(), expect.anything());
+  });
+
+  test('Recipient should be resolved if it is an Awala Internet address', async () => {
+    await deliverParcel(host, body);
 
     expect(stubAxiosPost).toBeCalledWith(
       `https://${targetHost}:${targetPort}`,
@@ -49,15 +55,20 @@ describe('deliverParcel', () => {
       expect.anything(),
     );
 
-    expect(relaynet.resolvePublicAddress).toBeCalledWith(host, relaynet.BindingType.PDC);
+    expect(relaynet.resolveInternetAddress).toBeCalledWith(host, relaynet.BindingType.PDC);
   });
 
-  test('Target URL should be used as is if public address record does not exist', async () => {
-    getMockInstance(relaynet.resolvePublicAddress).mockResolvedValue(null);
+  test('Recipient should be used as is if resolution returned nothing', async () => {
+    getMockInstance(relaynet.resolveInternetAddress).mockResolvedValue(null);
+    const ipAddress = '192.88.99.1';
 
-    await deliverParcel(url, body);
+    await deliverParcel(ipAddress, body);
 
-    expect(stubAxiosPost).toBeCalledWith(url, expect.anything(), expect.anything());
+    expect(stubAxiosPost).toBeCalledWith(
+      `https://${ipAddress}`,
+      expect.anything(),
+      expect.anything(),
+    );
   });
 
   test('Parcel should be request body', async () => {
@@ -68,10 +79,10 @@ describe('deliverParcel', () => {
 
   test('Public address resolution errors should be wrapped', async () => {
     const error = new Error('DNSSEC failed');
-    getMockInstance(relaynet.resolvePublicAddress).mockRejectedValue(error);
+    getMockInstance(relaynet.resolveInternetAddress).mockRejectedValue(error);
 
     await expectPromiseToReject(
-      deliverParcel(url, body),
+      deliverParcel(host, body),
       new PoHTTPError(`Public address resolution failed: ${error.message}`),
     );
 
@@ -89,25 +100,6 @@ describe('deliverParcel', () => {
       'headers.Content-Type',
       'application/vnd.awala.parcel',
     );
-  });
-
-  describe('Relay address', () => {
-    test('Relay address should be included if specified', async () => {
-      const relayAddress = 'relay-address';
-      await deliverParcel(url, body, { gatewayAddress: relayAddress });
-
-      expect(stubAxiosPost).toBeCalledTimes(1);
-      const postCallArgs = getMockContext(stubAxiosPost).calls[0];
-      expect(postCallArgs[2]).toHaveProperty('headers.X-Awala-Gateway', relayAddress);
-    });
-
-    test('Relay address should be absent by default', async () => {
-      await deliverParcel(url, body);
-
-      expect(stubAxiosPost).toBeCalledTimes(1);
-      const postCallArgs = getMockContext(stubAxiosPost).calls[0];
-      expect(postCallArgs[2]).not.toHaveProperty('headers.X-Awala-Gateway');
-    });
   });
 
   test('Axios response should be returned', async () => {
@@ -128,32 +120,68 @@ describe('deliverParcel', () => {
     expect(agent).toHaveProperty('keepAlive', true);
   });
 
+  describe('TLS enablement option', () => {
+    test('URL resolution should use HTTPS if option is unspecified', async () => {
+      await deliverParcel(host, body);
+
+      expect(stubAxiosPost).toBeCalledWith(
+        expect.stringMatching(/^https:/),
+        expect.anything(),
+        expect.anything(),
+      );
+    });
+
+    test('URL resolution should use HTTPS if option is enabled', async () => {
+      await deliverParcel(host, body, { enableTls: true });
+
+      expect(stubAxiosPost).toBeCalledWith(
+        expect.stringMatching(/^https:/),
+        expect.anything(),
+        expect.anything(),
+      );
+    });
+
+    test('URL resolution should use HTTP if option is disabled', async () => {
+      mockEnvVars({ POHTTP_TLS_REQUIRED: 'false' });
+
+      await deliverParcel(host, body, { enableTls: false });
+
+      expect(stubAxiosPost).toBeCalledWith(
+        expect.stringMatching(/^http:/),
+        expect.anything(),
+        expect.anything(),
+      );
+    });
+  });
+
   describe('POHTTP_TLS_REQUIRED', () => {
+    const nonTlsUrl = 'http://example.com';
+
     test('Non-TLS URLs should be refused if POHTTP_TLS_REQUIRED is undefined', async () => {
       mockEnvVars({});
 
       await expectPromiseToReject(
-        deliverParcel('http://example.com', body),
-        new Error(`Can only POST to HTTPS URLs (got http://${targetHost}:${targetPort})`),
+        deliverParcel(nonTlsUrl, body),
+        new Error(`Can only POST to HTTPS URLs (got ${nonTlsUrl})`),
       );
     });
 
     test('Non-TLS URLs should be allowed if POHTTP_TLS_REQUIRED=false', async () => {
       mockEnvVars({ POHTTP_TLS_REQUIRED: 'false' });
 
-      await deliverParcel('http://example.com', body);
+      await deliverParcel(nonTlsUrl, body);
 
       expect(stubAxiosPost).toBeCalledTimes(1);
       const postCallArgs = getMockContext(stubAxiosPost).calls[0];
-      expect(postCallArgs[0]).toEqual(`http://${targetHost}:${targetPort}`);
+      expect(postCallArgs[0]).toEqual(nonTlsUrl);
     });
 
     test('Non-TLS URLs should be refused if POHTTP_TLS_REQUIRED=true', async () => {
       mockEnvVars({ POHTTP_TLS_REQUIRED: 'true' });
 
       await expectPromiseToReject(
-        deliverParcel('http://example.com', body),
-        new Error(`Can only POST to HTTPS URLs (got http://${targetHost}:${targetPort})`),
+        deliverParcel(nonTlsUrl, body),
+        new Error(`Can only POST to HTTPS URLs (got ${nonTlsUrl})`),
       );
     });
   });
@@ -227,14 +255,13 @@ describe('deliverParcel', () => {
       stubAxiosPost.mockRejectedValueOnce({ response: stubRedirectResponse });
       stubAxiosPost.mockResolvedValueOnce({ status: 202 });
 
-      const options: Partial<DeliveryOptions> = { gatewayAddress: 'the address', timeout: 2 };
+      const options: Partial<DeliveryOptions> = { timeout: 2 };
       await deliverParcel(url, body, options);
 
       expect(stubAxiosPost).toBeCalledTimes(2);
       const postCall2Args = getMockContext(stubAxiosPost).calls[1];
       expect(postCall2Args[1]).toEqual(body);
       expect(postCall2Args[2]).toEqual({
-        headers: { 'X-Awala-Gateway': options.gatewayAddress },
         maxRedirects: 0,
         timeout: options.timeout,
       });
