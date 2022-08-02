@@ -66,11 +66,8 @@
     "typescript": "^4.7.4"
   },
   "dependencies": {
-    "@relaycorp/relaynet-core": ">= 1.42.1 < 2",
+    "@relaycorp/relaynet-core": "^1.81.10",
     "axios": "^0.27.2",
     "env-var": "^7.1.1"
-  },
-  "peerDependencies": {
-    "@relaycorp/relaynet-core": ">= 1.42.1 < 2"
   }
 }

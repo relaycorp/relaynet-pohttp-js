@@ -1,4 +1,4 @@
-import { BindingType, PublicNodeAddress, resolvePublicAddress } from '@relaycorp/relaynet-core';
+import { BindingType, PublicNodeAddress, resolveInternetAddress } from '@relaycorp/relaynet-core';
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import { get as getEnvVar } from 'env-var';
 import * as https from 'https';
@@ -8,6 +8,7 @@ import PoHTTPError from './PoHTTPError';
 import PoHTTPInvalidParcelError from './PoHTTPInvalidParcelError';
 
 export interface DeliveryOptions {
+  readonly enableTls: boolean;
   readonly maxRedirects: number;
   readonly timeout: number;
 }
@@ -15,13 +16,13 @@ export interface DeliveryOptions {
 /**
  * Deliver the parcel to the specified node endpoint.
  *
- * @param targetNodeUrl The URL of the target node endpoint.
- * @param parcelSerialized The RAMF serialization of the parcel.
+ * @param recipientInternetAddressOrURL The Awala Internet address or URL of the recipient
+ * @param parcelSerialized The RAMF serialization of the parcel
  * @param options
- * @throws [[PoHTTPError]] when there's a networking error.
+ * @throws {PoHTTPError} when there's a networking error
  */
 export async function deliverParcel(
-  targetNodeUrl: string,
+  recipientInternetAddressOrURL: string,
   parcelSerialized: ArrayBuffer | Buffer,
   options: Partial<DeliveryOptions> = {},
 ): Promise<AxiosResponse> {
@@ -33,7 +34,7 @@ export async function deliverParcel(
     headers: { 'Content-Type': 'application/vnd.awala.parcel' },
     httpsAgent: new https.Agent({ keepAlive: true }),
   });
-  const url = await resolveURL(targetNodeUrl);
+  const url = await resolveURL(recipientInternetAddressOrURL, options.enableTls);
   const response = await postRequest(url, parcelSerialized, axiosInstance, axiosOptions);
   if (response.status === 307 || response.status === 308) {
     throw new PoHTTPError(`Reached maximum number of redirects (${axiosOptions.maxRedirects})`);
@@ -46,15 +47,30 @@ interface SupportedAxiosRequestConfig {
   readonly timeout: number;
 }
 
-async function resolveURL(targetNodeUrl: string): Promise<string> {
-  const urlParts = new URL(targetNodeUrl);
+async function resolveURL(targetNodeUrl: string, enableTls?: boolean): Promise<string> {
+  if (isURL(targetNodeUrl)) {
+    return targetNodeUrl;
+  }
+
   let address: PublicNodeAddress | null;
   try {
-    address = await resolvePublicAddress(urlParts.host, BindingType.PDC);
+    address = await resolveInternetAddress(targetNodeUrl, BindingType.PDC);
   } catch (err) {
     throw new PoHTTPError(err as Error, 'Public address resolution failed');
   }
-  return address ? `${urlParts.protocol}//${address.host}:${address.port}` : targetNodeUrl;
+  const hostAndPort = address ? `${address.host}:${address.port}` : targetNodeUrl;
+  const scheme = enableTls !== false ? 'https' : 'http';
+  return `${scheme}://${hostAndPort}`;
+}
+
+function isURL(url: string): boolean {
+  try {
+    // tslint:disable-next-line:no-unused-expression
+    new URL(url);
+  } catch (_) {
+    return false;
+  }
+  return true;
 }
 
 async function postRequest(
