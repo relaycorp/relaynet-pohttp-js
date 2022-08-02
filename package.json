@@ -40,7 +40,7 @@
     "url": "https://github.com/relaycorp/relaynet-pohttp-js/issues"
   },
   "engines": {
-    "node": ">=10"
+    "node": ">=14"
   },
   "homepage": "https://docs.relaycorp.tech/relaynet-pohttp-js/",
   "prettier": "@relaycorp/shared-config/.prettierrc.json",
