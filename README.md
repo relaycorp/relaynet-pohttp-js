@@ -36,11 +36,3 @@ TypeScript type declarations are included with this library.
 ## Use in integration or functional tests
 
 Per the Relaynet specs, bindings like PoHTTP must be used over TLS, but this validation can be turned off in test suites that send requests to a mock HTTP server by passing the options `useTls=false` to `deliverParcel()`.
-
-## Support
-
-If you have any questions or comments, you can [find us on Gitter](https://gitter.im/relaynet/community) or [create an issue on the GitHub project](https://github.com/relaycorp/relaynet-pohttp-js/issues/new/choose).
-
-## Updates
-
-Releases are automatically published on GitHub and NPM, and the [changelog can be found on GitHub](https://github.com/relaycorp/relaynet-pohttp-js/releases).
