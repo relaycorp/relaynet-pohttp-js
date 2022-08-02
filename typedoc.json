@@ -1,4 +1,4 @@
 {
   "exclude": ["**/*.spec.ts"],
-  "theme": "minimal"
+  "theme": "default"
 }
