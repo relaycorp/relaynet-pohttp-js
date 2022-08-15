@@ -54,7 +54,7 @@
   "devDependencies": {
     "@relaycorp/shared-config": "^1.9.1",
     "@types/asn1js": "^3.0.7",
-    "@types/jest": "^28.1.6",
+    "@types/jest": "^28.1.7",
     "@types/verror": "^1.10.6",
     "buffer-to-arraybuffer": "0.0.6",
     "jest": "^28.1.3",
