@@ -4,9 +4,9 @@ import bufferToArray from 'buffer-to-arraybuffer';
 
 import { expectPromiseToReject, getMockContext, getMockInstance } from './_test_utils';
 import { deliverParcel, DeliveryOptions } from './client';
-import PoHTTPClientBindingError from './PoHTTPClientBindingError';
-import PoHTTPError from './PoHTTPError';
-import PoHTTPInvalidParcelError from './PoHTTPInvalidParcelError';
+import { PoHTTPClientBindingError } from './PoHTTPClientBindingError';
+import { PoHTTPError } from './PoHTTPError';
+import { PoHTTPInvalidParcelError } from './PoHTTPInvalidParcelError';
 
 jest.mock('@relaycorp/relaynet-core', () => {
   const realRelaynet = jest.requireActual('@relaycorp/relaynet-core');

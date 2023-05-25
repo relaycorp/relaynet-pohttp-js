@@ -2,9 +2,9 @@ import { BindingType, PublicNodeAddress, resolveInternetAddress } from '@relayco
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import * as https from 'https';
 
-import PoHTTPClientBindingError from './PoHTTPClientBindingError';
-import PoHTTPError from './PoHTTPError';
-import PoHTTPInvalidParcelError from './PoHTTPInvalidParcelError';
+import { PoHTTPClientBindingError } from './PoHTTPClientBindingError';
+import { PoHTTPError } from './PoHTTPError';
+import { PoHTTPInvalidParcelError } from './PoHTTPInvalidParcelError';
 
 export interface DeliveryOptions {
   readonly useTls: boolean;

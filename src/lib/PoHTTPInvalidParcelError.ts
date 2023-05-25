@@ -1,3 +1,3 @@
-import PoHTTPError from './PoHTTPError';
+import { PoHTTPError } from './PoHTTPError';
 
-export default class PoHTTPInvalidParcelError extends PoHTTPError {}
+export class PoHTTPInvalidParcelError extends PoHTTPError {}
