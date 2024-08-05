@@ -44,7 +44,7 @@
   },
   "dependencies": {
     "@relaycorp/relaynet-core": "< 2",
-    "axios": "^1.7.2"
+    "axios": "^1.7.3"
   },
   "devDependencies": {
     "@relaycorp/shared-config": "^1.14.1",
