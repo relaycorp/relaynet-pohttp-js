@@ -47,7 +47,7 @@
     "axios": "^1.7.7"
   },
   "devDependencies": {
-    "@relaycorp/shared-config": "^1.14.1",
+    "@relaycorp/shared-config": "^1.15.0",
     "@types/asn1js": "^3.0.7",
     "@types/jest": "^28.1.7",
     "@types/verror": "^1.10.10",
